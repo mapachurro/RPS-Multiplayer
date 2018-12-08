@@ -1,0 +1,146 @@
+<!-- PSEUDOCODE
+___________________________________________
+
+html:
+
+-We'll need Bootstrap
+-We'll need the local .css
+-We'll need the link to the .js
+
+Name entry box with submit button
+Start button
+
+First row: One card, all the way across. This is the notifications space. It will have various things written to it:
+    -Instructions as to how to begin the game (enter your name and hit submit, hit start)
+    -Notifications as to who wins
+    -Play again button
+
+Three columns, one row: 
+          -Column 1: User 1
+          -Column 2: Chat window
+          -Column 3: User 2
+
+Column 1 and Column 2 will have three images in them, Rock, Paper, and Scissors.
+These are, essentially, buttons; when you click on the image, a corresponding value is registered in the database.
+
+___________________________________________
+
+js:
+
+-We'll need the firebase database
+-We'll need jquery
+
+Reuse the old solved RPS logic. These are the html elements that that solution used to make it work:
+-->
+
+<div>
+    <p id="directions-text"></p>
+    <p id="userchoice-text"></p>
+    <p id="computerchoice-text"></p>
+    <p id="wins-text"></p>
+    <p id="losses-text"></p>
+    <p id="ties-text"></p>
+</div>
+
+
+<!-- So, given this, we'll have to do some adaptations and additions, etc etc
+
+Most importantly, we need to figure out how things are going to go to and from the Firebase:
+
+-It doesn't matter which player goes first. Whichever player goes first, you grab that player's unique IP id thing from Firebase
+-Their choice becomes Choice1
+-Second player choice is made, that user's ID is grabbed
+-Their choice becomes Choice2
+
+The RPS js logic is run based on Choice1 and Choice2, and the corresponding results are slapped into the correct .html sections.-->
+
+<!doctype html>
+<html>
+
+<head>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css" integrity="sha384-MCw98/SFnGE8fJT3GXwEOngsV7Zt27NXFoaoApmYm81iuXoPkFOJwJ8ERdknLPMO"
+        crossorigin="anonymous">
+
+    <script src="https://code.jquery.com/jquery-3.3.1.js" integrity="sha256-2Kok7MbOyxpgUVvAk/HJ2jigOSYS2auK4Pfzbm7uH60="
+        crossorigin="anonymous"></script>
+    <script src="https://www.gstatic.com/firebasejs/5.7.0/firebase.js"></script>
+
+    <link rel="stylesheet" href="./assets/css/style.css">
+    <script src="javascript/app.js"></script>
+    <script src="https://cdn.jsdelivr.net/momentjs/2.12.0/moment.min.js"></script>
+
+</head>
+
+<body>
+
+
+    <div id="titletron" class="jumbotron jumbotron-fluid">
+        <div class="container">
+            <h1 class="display-4">EPIC BATTLE: ROCK PAPER SCISSORS MULTIPLAYER</h1>
+            <h4 class="lead">Choose Your Weapon.</h4>
+        </div>
+    </div>
+
+    <div id="background">
+        <div class="container">
+            <div class="row">
+                <div class="col-11">
+                        <div class="card" id="messageSpace">
+                                <div class="card-body">
+                                    <h5 class="card-title"></h5>
+                                    </form>
+                                </div>
+                            </div>
+
+                </div>
+            </div>
+        </div>
+
+        <br>
+        <br>
+
+        <div class="container">
+            <div class="row">
+                <div class="col-4">
+                    <div class="card" id="player1">
+                        <div class="card-header">
+                            <h3>PLAYER 1</h3>
+                        </div>
+                        <div class="card-body">
+                            <h5 class="card-title"></h5>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-3">
+                    <div class="card" id="player1">
+                        <div class="card-header">
+                            <h3>CHAT</h3>
+                        </div>
+                        <div class="card-body">
+                            <h5 class="card-title"></h5>
+                            </form>
+                        </div>
+                    </div>
+
+                </div>
+                <div class="col-4">
+                    <div class="card" id="player1">
+                        <div class="card-header">
+                            <h3>PLAYER 2</h3>
+                        </div>
+                        <div class="card-body">
+                            <h5 class="card-title"></h5>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</body>
+<div id="footer">Oliver JL Renwick, 2018
+</div>
+
+</html>
