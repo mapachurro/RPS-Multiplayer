@@ -1,11 +1,7 @@
 // Load the initial instructions and buttons
 $(document).ready(function () {
 
-  function messageLoad() {
-    $("#messageSpace").append(instructions);
-    $("#messageSpace").append(nameBox);
-    // $("#messageSpace").append(playButton);
-  };
+
   // Initialize Firebase
   var config = {
     apiKey: "AIzaSyC6E8lKftxlROutJgnbEps-esvwbnVuoUg",
@@ -35,12 +31,17 @@ $(document).ready(function () {
   // Create variables that hold references to the places in the HTML where we want to display things.
 
   var userChoice = "";
-  var computerChoiceText = document.getElementById("computerchoice-text");
-  var winsText = document.getElementById("wins-text");
-  var lossesText = document.getElementById("losses-text");
-  var tiesText = document.getElementById("ties-text");
+  var winsText = "";
+  var lossesText = "";
+  var tiesText = "";
 
   // Load initial messages
+  function messageLoad() {
+    $("#messageSpace").append(instructions);
+    $("#messageSpace").append(nameBox);
+    // $("#messageSpace").append(playButton);
+  };
+
   messageLoad();
   
 //The name submitting functionality triggers most gameplay functionality. I didn't
@@ -56,11 +57,13 @@ $(document).ready(function () {
       wins: "",
       losses: "",
     });
+    //Put the player's name in a box on the page.
     $("#playerOne").text(playerName);
     $("#messageSpace").text("ATTACK!");
     console.log(users);
   });
 
+//This is the logic for the player to select an attack.
   $("#rock").click(function () {
     if (userChoice == "") {
       userChoice = "rock"
@@ -70,7 +73,6 @@ $(document).ready(function () {
         playerChoice: userChoice,
       });
     }
-
     else{
       $("#messageSpace").text("Wait for the other player to go!");
     }
@@ -85,7 +87,6 @@ $(document).ready(function () {
         playerChoice: userChoice,
       });
     }
-
     else{
       $("#messageSpace").text("Wait for the other player to go!");
     }
@@ -100,23 +101,15 @@ $(document).ready(function () {
         playerChoice: userChoice,
       });
     }
-
     else{
       $("#messageSpace").text("Wait for the other player to go!");
     }
   })
 
 
-  //   // This function is run whenever the user presses a key.
+  //Below is some RPS logic that I pulled from an old assignment. I was hoping to rewrite it/repurpose it for this game,
+  //and I still plan to, once I can get the firebase aspect of things working.
 
-
-  //     // Determines which key was pressed.
-  //     var userGuess = "";
-
-  //     // Randomly chooses a choice from the options array. This is the Computer's guess.
-  //     var computerGuess = computerChoices[Math.floor(Math.random() * computerChoices.length)];
-
-  //     // Reworked our code from last step to use "else if" instead of lots of if statements.
 
   //     // This logic determines the outcome of the game (win/loss/tie), and increments the appropriate number
   //     if ((userGuess === "r") || (userGuess === "p") || (userGuess === "s")) {
@@ -139,7 +132,6 @@ $(document).ready(function () {
 
   //       // Display the user and computer guesses, and wins/losses/ties.
   //       userChoiceText.textContent = "You chose: " + userGuess;
-  //       computerChoiceText.textContent = "The computer chose: " + computerGuess;
   //       winsText.textContent = "wins: " + wins;
   //       lossesText.textContent = "losses: " + losses;
   //       tiesText.textContent = "ties: " + ties;
