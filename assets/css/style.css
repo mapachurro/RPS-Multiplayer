@@ -15,10 +15,23 @@ background-color: whitesmoke;
 }
 
 .playIMG {
+  width: 150px;
+}
+
+/* #rock {
   visibility: hidden;
   width: 150px;
 }
 
+#paper {
+  visibility: hidden;
+  width: 150px;
+}
+
+#scissors {
+  visibility: hidden;
+  width: 150px;
+} */
 .footer {
   bottom: 0;
   width: 100%;
