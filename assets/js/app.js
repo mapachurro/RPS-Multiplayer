@@ -1,6 +1,7 @@
 // Load the initial instructions and buttons
 $(document).ready(function () {
 
+  
 
   // Initialize Firebase
   var config = {
@@ -13,14 +14,22 @@ $(document).ready(function () {
   };
   firebase.initializeApp(config);
 
-  // Create a variable to reference the database.
+// Variables
+//________________________________________________________________________________________
+
+  // Create database variables.
   var database = firebase.database();
   var users = database.ref("/playerInfo")
+  var choices = database.ref("/playerChoice")
 
+  // Variables for local versions of database elements.
+  var playerName;
+  var userChoice;
+  var remoteName;
+  var remoteChoice;
 
   // Create button variables that can be loaded dynamically into the messageSpace
   var nameBox = ("<form> <div class='form-group'> <label for='playerName'> </label> <input type='name' class='form-control' id='playerName' aria-describedby='name' placeholder='Enter player name'> </div> <button id='submitName' type='button' class='btn btn-primary'>Submit</button> </form> <br>");
-  var playButton = ("<form> <div class='form-group'> <button id='playButton' type='button' class='btn btn-primary'>PLAY</button> </form> <br>");
   var instructions = ("<h4 id='instructions'>To play, insert your name into the box, hit submit, and then hit play!</h4> <br>");
 
   // Creating variables to hold the number of wins, losses, and ties. They start at 0.
@@ -36,39 +45,61 @@ $(document).ready(function () {
   var tiesText = "";
 
   // Load initial messages
+  //____________________________________________________________________________________
   function messageLoad() {
     $("#messageSpace").append(instructions);
     $("#messageSpace").append(nameBox);
     // $("#messageSpace").append(playButton);
   };
 
-  messageLoad();
-  
+  //On page load, we need to check to see if there's anyone in the database--
+  users.once("value")
+  .then(function(snapshot) {
+    var a = snapshot.exists();
+    console.log(a)
+  //if so, we need to enter their name into the Player One div.
+    if (a == true){
+      remoteName = users.firebaseName;
+      console.log("Remote player name " + remoteName);
+      $("#playerOne").text(remoteName);
+    }
+    //If not, then we don't do anything -- we wait for the player to put their name into the username div, 
+    //and we populate with playerName.
+    else{
+      messageLoad();
+    }
+  })
+
+
+
 //The name submitting functionality triggers most gameplay functionality. I didn't
 //initially design it like this, but Bootstrap buttons do things that are not entirely
 //clear to me and screw up what you want to do with them.
+//_______________________________________________________________________________________
   $("#submitName").click(function () {
     //Get player name
     playerName = $("#playerName").val().trim();
     console.log("player name is " + playerName)
     //Send player name to Firebase
-    database.ref("/playerInfo").set({
+    users.push({
       firebaseName: playerName,
       wins: "",
       losses: "",
     });
     //Put the player's name in a box on the page.
-    $("#playerOne").text(playerName);
+    // $("#playerOne").text(playerName);
     $("#messageSpace").text("ATTACK!");
     console.log(users);
   });
 
 //This is the logic for the player to select an attack.
+//______________________________________________________________________________________
+//ROCK
   $("#rock").click(function () {
     if (userChoice == "") {
       userChoice = "rock"
       console.log(userChoice)
-      database.ref("/playerChoice").set({
+      choices.push({
         firebaseName: playerName,
         playerChoice: userChoice,
       });
@@ -77,12 +108,26 @@ $(document).ready(function () {
       $("#messageSpace").text("Wait for the other player to go!");
     }
   })
-
+//PAPER
   $("#paper").click(function () {
     if (userChoice == "") {
       userChoice = "paper"
       console.log(userChoice)
-      database.ref("/playerChoice").set({
+      choices.push({
+        firebaseName: playerName,
+        playerChoice: userChoice,
+      });
+    }
+    else{
+      $("#messageSpace").text("Wait for the other player to go!");
+    }
+  })
+//SCISSORS
+  $("#scissors").click(function () {
+    if (userChoice == "") {
+      userChoice = "scissors"
+      console.log(userChoice)
+      choices.set({
         firebaseName: playerName,
         playerChoice: userChoice,
       });
@@ -92,19 +137,42 @@ $(document).ready(function () {
     }
   })
 
-  $("#scissors").click(function () {
-    if (userChoice == "") {
-      userChoice = "scissors"
-      console.log(userChoice)
-      database.ref("/playerChoice").set({
-        firebaseName: playerName,
-        playerChoice: userChoice,
-      });
+
+  //OK. Here's where the rubber meets the road. 
+  //We're going to need to get a snapshot of the node which is updated with the user data.
+    
+    //Then, we have an event listener that listens for updates to the firebase userInfo node.
+     database.ref("/playerInfo").on("value", function(snapshot) {
+    //Set up an if loop, where hopefully, we can determine whether firebasename = playerName.
+    if (snapshot.firebaseName == playerName) {
+    //If so, then no worries, our user's name is already in the box.
     }
+     //If not, then it's the other user's name, and we need to slap that user's name in the other box.
     else{
-      $("#messageSpace").text("Wait for the other player to go!");
+      remoteName = snapshot.firebaseName
+      $("#playerTwo").text(remoteName);
     }
-  })
+    //And in the chat box, come to think of it.
+
+  });
+
+
+  //Now, for gameplay.
+  //First we set up a call to the database to get it to bring a snapshot of data
+  //every time we get a new player move.
+  database.ref("/playerChoice").on("value", function(snapshot) {
+  //Then we need to figure out if the firebaseName is the same as playerName.
+  if (snapshot.firebaseName == playerName) {
+  //If so, then that's the local player's move, and we should assign it to a variable.
+    userChoice = snapshot.playerChoice;
+  }
+  //if not, then that's the remote player's move, and we should assign it to a variable. 
+  else{
+    remoteChoice = snapshot.playerChoice;
+    }
+
+  //At this point, we should be able to evaluate the moves according to RPS logic.
+  });
 
 
   //Below is some RPS logic that I pulled from an old assignment. I was hoping to rewrite it/repurpose it for this game,
@@ -112,29 +180,50 @@ $(document).ready(function () {
 
 
   //     // This logic determines the outcome of the game (win/loss/tie), and increments the appropriate number
-  //     if ((userGuess === "r") || (userGuess === "p") || (userGuess === "s")) {
+      if ((userChoice === "r") || (userChoice === "p") || (userChoice === "s")) {
 
-  //       if ((userGuess === "r") && (computerGuess === "s")) {
-  //         wins++;
-  //       } else if ((userGuess === "r") && (computerGuess === "p")) {
-  //         losses++;
-  //       } else if ((userGuess === "s") && (computerGuess === "r")) {
-  //         losses++;
-  //       } else if ((userGuess === "s") && (computerGuess === "p")) {
-  //         wins++;
-  //       } else if ((userGuess === "p") && (computerGuess === "r")) {
-  //         wins++;
-  //       } else if ((userGuess === "p") && (computerGuess === "s")) {
-  //         losses++;
-  //       } else if (userGuess === computerGuess) {
-  //         ties++;
-  //       }
+        if ((userChoice === "r") && (remoteChoice === "s")) {
+          wins++;
+        } else if ((userChoice === "r") && (remoteChoice === "p")) {
+          losses++;
+        } else if ((userChoice === "s") && (remoteChoice === "r")) {
+          losses++;
+        } else if ((userChoice === "s") && (remoteChoice === "p")) {
+          wins++;
+        } else if ((userChoice === "p") && (remoteChoice === "r")) {
+          wins++;
+        } else if ((userChoice === "p") && (remoteChoice === "s")) {
+          losses++;
+        } else if (userChoice === remoteChoice) {
+          ties++;
+        }
 
   //       // Display the user and computer guesses, and wins/losses/ties.
-  //       userChoiceText.textContent = "You chose: " + userGuess;
+  //       userChoiceText.textContent = "You chose: " + userChoice;
   //       winsText.textContent = "wins: " + wins;
   //       lossesText.textContent = "losses: " + losses;
   //       tiesText.textContent = "ties: " + ties;
-  // }
+  }
+
+//We want to clear out the user data when the session closes.
+
+// All of our connections will be stored in this directory.
+var connectionsRef = database.ref("/connections");
+// '.info/connected' is a special location provided by Firebase that is updated
+// every time the client's connection state changes.
+var connectedRef = database.ref(".info/connected");
+// When the client's connection state changes...
+connectedRef.on("value", function(snap) {
+  // If they are connected..
+  if (snap.val()) {
+    // Add user to the connections list.
+    var con = connectionsRef.push(true);
+    // Remove user from the connection list when they disconnect.
+    con.onDisconnect().remove();
+    users.onDisconnect().remove();
+    choices.onDisconnect().remove();
+  }
+});
+
 
 });
