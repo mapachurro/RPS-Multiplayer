@@ -36,7 +36,7 @@ $(document).ready(function () {
   var ties = 0;
 
   // Create variables that hold references to the places in the HTML where we want to display things.
-  var userChoice = "";
+  var userChoice;
   var winsText = "";
   var lossesText = "";
   var tiesText = "";
@@ -98,7 +98,7 @@ messageLoad();
     if (userChoice == undefined) {
       userChoice = "rock"
       console.log(userChoice)
-      database.ref("/playerChoice").push({
+      choices.push({
         firebaseName: playerName,
         playerChoice: userChoice,
       });
@@ -112,7 +112,7 @@ messageLoad();
     if (userChoice == undefined) {
       userChoice = "paper"
       console.log(userChoice)
-      database.ref("/playerChoice").push({
+      choices.push({
         firebaseName: playerName,
         playerChoice: userChoice,
       });
@@ -126,7 +126,7 @@ messageLoad();
     if (userChoice == undefined) {
       userChoice = "scissors"
       console.log(userChoice)
-      database.ref("/playerChoice").push({
+      choices.push({
         firebaseName: playerName,
         playerChoice: userChoice,
       });
