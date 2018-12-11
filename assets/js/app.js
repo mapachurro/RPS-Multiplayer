@@ -1,8 +1,6 @@
 // Load the initial instructions and buttons
 $(document).ready(function () {
 
-  
-
   // Initialize Firebase
   var config = {
     apiKey: "AIzaSyC6E8lKftxlROutJgnbEps-esvwbnVuoUg",
@@ -19,8 +17,8 @@ $(document).ready(function () {
 
   // Create database variables.
   var database = firebase.database();
-  var users = database.ref("/playerInfo")
-  var choices = database.ref("/playerChoice")
+  var users = database.ref("/playerInfo");
+  var choices = database.ref("/playerChoice");
 
   // Variables for local versions of database elements.
   var playerName;
@@ -38,7 +36,6 @@ $(document).ready(function () {
   var ties = 0;
 
   // Create variables that hold references to the places in the HTML where we want to display things.
-
   var userChoice = "";
   var winsText = "";
   var lossesText = "";
@@ -56,7 +53,7 @@ $(document).ready(function () {
   users.once("value")
   .then(function(snapshot) {
     var a = snapshot.exists();
-    console.log(a)
+    console.log(a);
   //if so, we need to enter their name into the Player One div.
     if (a == true){
       remoteName = users.firebaseName;
@@ -66,17 +63,19 @@ $(document).ready(function () {
     //If not, then we don't do anything -- we wait for the player to put their name into the username div, 
     //and we populate with playerName.
     else{
-      messageLoad();
-    }
-  })
+    };
+  });
 
-
+//This needs to be executed with a fairly global scope, because the submitName function
+//is a global event listener.
+messageLoad();
 
 //The name submitting functionality triggers most gameplay functionality. I didn't
 //initially design it like this, but Bootstrap buttons do things that are not entirely
 //clear to me and screw up what you want to do with them.
 //_______________________________________________________________________________________
   $("#submitName").click(function () {
+    console.log ("name click successful")
     //Get player name
     playerName = $("#playerName").val().trim();
     console.log("player name is " + playerName)
@@ -87,7 +86,7 @@ $(document).ready(function () {
       losses: "",
     });
     //Put the player's name in a box on the page.
-    // $("#playerOne").text(playerName);
+    $("#playerOne").text(playerName);
     $("#messageSpace").text("ATTACK!");
     console.log(users);
   });
@@ -96,10 +95,10 @@ $(document).ready(function () {
 //______________________________________________________________________________________
 //ROCK
   $("#rock").click(function () {
-    if (userChoice == "") {
+    if (userChoice == undefined) {
       userChoice = "rock"
       console.log(userChoice)
-      choices.push({
+      database.ref("/playerChoice").push({
         firebaseName: playerName,
         playerChoice: userChoice,
       });
@@ -110,10 +109,10 @@ $(document).ready(function () {
   })
 //PAPER
   $("#paper").click(function () {
-    if (userChoice == "") {
+    if (userChoice == undefined) {
       userChoice = "paper"
       console.log(userChoice)
-      choices.push({
+      database.ref("/playerChoice").push({
         firebaseName: playerName,
         playerChoice: userChoice,
       });
@@ -124,10 +123,10 @@ $(document).ready(function () {
   })
 //SCISSORS
   $("#scissors").click(function () {
-    if (userChoice == "") {
+    if (userChoice == undefined) {
       userChoice = "scissors"
       console.log(userChoice)
-      choices.set({
+      database.ref("/playerChoice").push({
         firebaseName: playerName,
         playerChoice: userChoice,
       });
@@ -135,42 +134,43 @@ $(document).ready(function () {
     else{
       $("#messageSpace").text("Wait for the other player to go!");
     }
-  })
-
+  });
 
   //OK. Here's where the rubber meets the road. 
   //We're going to need to get a snapshot of the node which is updated with the user data.
-    
-    //Then, we have an event listener that listens for updates to the firebase userInfo node.
-     database.ref("/playerInfo").on("value", function(snapshot) {
+  //Then, we have an event listener that listens for updates to the firebase userInfo node.
+        //  database.ref("/playerInfo").on("value", function(snapshot) {
+  
     //Set up an if loop, where hopefully, we can determine whether firebasename = playerName.
-    if (snapshot.firebaseName == playerName) {
-    //If so, then no worries, our user's name is already in the box.
-    }
-     //If not, then it's the other user's name, and we need to slap that user's name in the other box.
-    else{
-      remoteName = snapshot.firebaseName
-      $("#playerTwo").text(remoteName);
-    }
+    //****THIS IS A MISTAKE HERE; the .exists method returns a Boolean. What I want is a value.
+    // if (snapshot.child("firebaseName").exists() == playerName) {
+    // //If so, then no worries, our user's name is already in the box.
+    // }
+    //  //If not, then it's the other user's name, and we need to slap that user's name in the other box.
+    // else{
+    //   remoteName = snapshot.child("firebaseName").exists()
+    //   $("#playerTwo").text(remoteName);
+    // }
     //And in the chat box, come to think of it.
-
-  });
+  // });
 
 
   //Now, for gameplay.
   //First we set up a call to the database to get it to bring a snapshot of data
   //every time we get a new player move.
   database.ref("/playerChoice").on("value", function(snapshot) {
+    console.log(snapshot); //This works. The snapshot object contains the remote player's move.
+
   //Then we need to figure out if the firebaseName is the same as playerName.
-  if (snapshot.firebaseName == playerName) {
+  if (snapshot.child("firebaseName").exists() == playerName) { //Same issue here -- NOT .exists()
+  console.log(remotePlayer);
   //If so, then that's the local player's move, and we should assign it to a variable.
-    userChoice = snapshot.playerChoice;
+    userChoice = database.ref("/playerChoice").playerChoice;
   }
   //if not, then that's the remote player's move, and we should assign it to a variable. 
   else{
-    remoteChoice = snapshot.playerChoice;
+    remoteChoice = database.ref("/playerChoice").playerChoice;
     }
-
   //At this point, we should be able to evaluate the moves according to RPS logic.
   });
 
@@ -180,19 +180,19 @@ $(document).ready(function () {
 
 
   //     // This logic determines the outcome of the game (win/loss/tie), and increments the appropriate number
-      if ((userChoice === "r") || (userChoice === "p") || (userChoice === "s")) {
+      if ((userChoice === "rock") || (userChoice === "paper") || (userChoice === "scissors")) {
 
-        if ((userChoice === "r") && (remoteChoice === "s")) {
+        if ((userChoice === "rock") && (remoteChoice === "scissors")) {
           wins++;
-        } else if ((userChoice === "r") && (remoteChoice === "p")) {
+        } else if ((userChoice === "rock") && (remoteChoice === "paper")) {
           losses++;
-        } else if ((userChoice === "s") && (remoteChoice === "r")) {
+        } else if ((userChoice === "scissors") && (remoteChoice === "rock")) {
           losses++;
-        } else if ((userChoice === "s") && (remoteChoice === "p")) {
+        } else if ((userChoice === "scissors") && (remoteChoice === "paper")) {
           wins++;
-        } else if ((userChoice === "p") && (remoteChoice === "r")) {
+        } else if ((userChoice === "paper") && (remoteChoice === "rock")) {
           wins++;
-        } else if ((userChoice === "p") && (remoteChoice === "s")) {
+        } else if ((userChoice === "paper") && (remoteChoice === "scissors")) {
           losses++;
         } else if (userChoice === remoteChoice) {
           ties++;
