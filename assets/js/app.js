@@ -26,6 +26,9 @@ $(document).ready(function () {
   var userChoice;
   var remoteName;
   var remoteChoice;
+  var chatName;
+  var remoteChat;
+  var userChoice;
 
   // Create button variables that can be loaded dynamically into the messageSpace
   var nameBox = ("<form class='needs-validation' novalidate> <div class='form-group'> <label for='playerName'> </label> <input type='name' class='form-control' id='playerName' aria-describedby='name' placeholder='Enter player name'> </div> <button id='submitName' type='button' class='btn btn-primary'>Submit</button> </form> <br>");
@@ -35,12 +38,6 @@ $(document).ready(function () {
   var wins = 0;
   var losses = 0;
   var ties = 0;
-
-  // Create variables that hold references to the places in the HTML where we want to display things.
-  var userChoice;
-  var winsText = "";
-  var lossesText = "";
-  var tiesText = "";
 
   // Load initial messages
   //____________________________________________________________________________________
@@ -56,13 +53,37 @@ $(document).ready(function () {
 
 
   //This is the chat box functionality
+  //_____________________________________________________________________________________
+  //First of all, 
   $("#chatButton").click(function() {
     //get chat content
     playerChat = $("#chatArea").val().trim();
+    //clear the chat
+    $("#chatArea").val('');
+    //add in the new chat comment
+    $("#chatArea").val(playerName + ": " + playerChat)
+    console.log("new chat: " + playerChat)
+    //send chat content to Firebase
+    if (playerName !== undefined) {
+    chatBase.push({
+      firebaseName: playerName,
+      newChat: playerChat,
+    })
+  }
+  });
 
+  //Now let's add a firebase listener
+  chatBase.orderByChild("firebaseName").on("child_added", function (snapshot) {
+    chatName = snapshot.val().firebaseName;
+    remoteChat = snapshot.val().newChat;
+    $("#chatArea").val(chatName + ": " + remoteChat);
+  });
 
-  })
-
+  //It's confusing to be typing on top of someone else's text. Let's make this super-Snapchatty.
+  $("#chatArea").click(function(){
+    $("#chatArea").val('');
+  });
+  
 
   //The name submitting functionality triggers most gameplay functionality. I didn't
   //initially design it like this, but Bootstrap buttons do things that are not entirely
@@ -164,6 +185,7 @@ $(document).ready(function () {
   //Now, for gameplay.
   //First we set up a call to the database to get it to bring a snapshot of data
   //every time we get a new player move.
+  //________________________________________________________________________________________
   choices.orderByChild("firebaseName").on("child_added", function (snapshot) {
     console.log(snapshot.val().firebaseName + " chose " + snapshot.val().playerChoice + "!")
     //Then we need to figure out if the firebaseName is the same as playerName.
@@ -187,7 +209,8 @@ $(document).ready(function () {
   //and I still plan to, once I can get the firebase aspect of things working.
 
 
-  //     // This logic determines the outcome of the game (win/loss/tie), and increments the appropriate number
+  // This logic determines the outcome of the game (win/loss/tie), and increments the appropriate number
+  //___________________________________________________________________________________________________
   function evaluate(){
     console.log("Evaluating!")
     if ((userChoice == "rock") && (remoteChoice == "scissors")) {
@@ -245,6 +268,7 @@ $(document).ready(function () {
       con.onDisconnect().remove();
       users.onDisconnect().remove();
       choices.onDisconnect().remove();
+      chatBase.onDisconnect().remove();
     }
   });
 
